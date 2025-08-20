@@ -1,6 +1,8 @@
+
 """
     This file is part of ComfyUI.
     Copyright (C) 2024 Comfy
+
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,6 +16,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 
 import psutil
@@ -142,6 +145,7 @@ if args.cpu:
 def is_intel_xpu():
     global cpu_state
     global xpu_available
+
     if cpu_state == CPUState.GPU:
         if xpu_available:
             return True
@@ -166,24 +170,9 @@ def is_ixuca():
     return False
 
 def get_torch_device():
-    global directml_enabled
-    global cpu_state
-    if directml_enabled:
-        global directml_device
-        return directml_device
-    if cpu_state == CPUState.MPS:
-        return torch.device("mps")
-    if cpu_state == CPUState.CPU:
-        return torch.device("cpu")
-    else:
-        if is_intel_xpu():
-            return torch.device("xpu", torch.xpu.current_device())
-        elif is_ascend_npu():
-            return torch.device("npu", torch.npu.current_device())
-        elif is_mlu():
-            return torch.device("mlu", torch.mlu.current_device())
-        else:
-            return torch.device(torch.cuda.current_device())
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
 
 def get_total_memory(dev=None, torch_total_too=False):
     global directml_enabled
@@ -195,8 +184,8 @@ def get_total_memory(dev=None, torch_total_too=False):
         mem_total_torch = mem_total
     else:
         if directml_enabled:
-            mem_total = 1024 * 1024 * 1024 #TODO
-            mem_total_torch = mem_total
+           mem_total = 1024 * 1024 * 1024 #TODO
+           mem_total_torch = mem_total
         elif is_intel_xpu():
             stats = torch.xpu.memory_stats(dev)
             mem_reserved = stats['reserved_bytes.all.current']
